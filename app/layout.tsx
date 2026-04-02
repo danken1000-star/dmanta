@@ -18,8 +18,11 @@ const syne = Syne({
 });
 
 export const metadata: Metadata = {
-  title: "DMANTA",
-  description: "Swiss precision. African soul.",
+  title: 'DMANTA',
+  description: 'Swiss precision. African soul.',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
