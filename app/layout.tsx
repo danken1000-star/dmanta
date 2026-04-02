@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { Cormorant_Garamond, Syne } from "next/font/google";
 import "./globals.css";
 
@@ -37,6 +38,7 @@ export default function RootLayout({
     >
       <body className={`${syne.className} min-h-full antialiased`}>
         {children}
+        <Analytics />
       </body>
     </html>
   );
