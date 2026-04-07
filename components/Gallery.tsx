@@ -31,6 +31,31 @@ const images = [
   "/images/portraits/p26.webp",
 ];
 
+function MasonryGridImage({
+  src,
+  onOpen,
+}: {
+  src: string;
+  onOpen: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="block w-full cursor-pointer break-inside-avoid border-none bg-transparent p-0"
+      style={{ marginBottom: "8px" }}
+    >
+      <img
+        src={src}
+        alt=""
+        className="block w-full opacity-100 transition-opacity duration-300 hover:opacity-[0.85]"
+        loading="lazy"
+        decoding="async"
+      />
+    </button>
+  );
+}
+
 export function Gallery() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -103,21 +128,11 @@ export function Gallery() {
         }}
       >
         {images.map((src, index) => (
-          <button
+          <MasonryGridImage
             key={src}
-            type="button"
-            onClick={() => openAt(index)}
-            className="block w-full cursor-pointer break-inside-avoid overflow-hidden border-none bg-transparent p-0 transition-opacity duration-300 hover:opacity-[0.85]"
-            style={{ marginBottom: "8px" }}
-          >
-            <img
-              src={src}
-              alt=""
-              className="block w-full"
-              loading="lazy"
-              decoding="async"
-            />
-          </button>
+            src={src}
+            onOpen={() => openAt(index)}
+          />
         ))}
       </div>
 
