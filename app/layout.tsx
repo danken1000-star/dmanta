@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { Cormorant_Garamond, Syne } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 const cormorantGaramond = Cormorant_Garamond({
@@ -105,6 +107,8 @@ export default function RootLayout({
             }),
           }}
         />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
