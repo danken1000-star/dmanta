@@ -89,6 +89,19 @@ export function Navigation() {
               </li>
             );
           })}
+          <li className="flex items-center">
+            <span className="px-3 text-white/40 select-none" aria-hidden>
+              ·
+            </span>
+            <a
+              href="https://www.instagram.com/1dmanta"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative pb-1 text-sm font-medium tracking-wide text-white transition-opacity hover:opacity-90"
+            >
+              @1dmanta
+            </a>
+          </li>
         </ul>
 
         <button
@@ -141,6 +154,17 @@ export function Navigation() {
               </li>
             );
           })}
+          <li>
+            <a
+              href="https://www.instagram.com/1dmanta"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMenuOpen(false)}
+              className="block border-b border-white/10 py-3 text-base font-medium text-white"
+            >
+              @1dmanta
+            </a>
+          </li>
         </ul>
       </div>
     </header>
