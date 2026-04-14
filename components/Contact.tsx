@@ -52,6 +52,21 @@ export function Contact() {
           </span>
           @1dmanta
         </a>
+        <span className="text-[#666]"> · </span>
+        <a
+          href="https://unsplash.com/@1dmanta"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center text-[#F5F0E8] transition-colors duration-300 hover:text-[#72d5c2]"
+          style={{ gap: "0.4rem" }}
+        >
+          <span className="inline-flex shrink-0 text-white" aria-hidden>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width={14} height={14} fill="currentColor">
+              <path d="M10 9V0h12v9H10zm12 5h10v18H0V14h10v9h12v-9z" />
+            </svg>
+          </span>
+          @1dmanta
+        </a>
       </p>
     </section>
   );
