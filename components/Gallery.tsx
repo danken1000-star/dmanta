@@ -12,8 +12,9 @@ export async function Gallery() {
 
   const files = fs
     .readdirSync(portraitsDir)
-    .filter((f) => f.toLowerCase().endsWith(".webp"))
-    .sort((a, b) => a.localeCompare(b));
+    .filter((f) => f.toLowerCase().endsWith(".webp"));
+
+  files.sort();
 
   const images = files.map((file) => `/images/portraits/${file}`);
 
