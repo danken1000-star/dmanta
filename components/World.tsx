@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const worlds = Array.from(
   { length: 12 },
@@ -69,6 +69,20 @@ export function World() {
   const lightboxSrc =
     lightboxIndex !== null ? worlds[lightboxIndex] ?? null : null;
 
+  const touchStartX = useRef<number | null>(null);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    if (delta < -50) goNext();
+    else if (delta > 50) goPrev();
+    touchStartX.current = null;
+  };
+
   return (
     <section
       className="w-full bg-[#0a0a0a]"
@@ -115,7 +129,16 @@ export function World() {
           className="fixed inset-0 z-[100] flex items-center justify-center"
           style={{ backgroundColor: "rgba(0,0,0,0.95)" }}
           onClick={closeLightbox}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
         >
+          <span
+            className="absolute top-5 right-16 z-10 font-sans text-sm leading-none text-white/60 tabular-nums md:top-7 md:right-20"
+            aria-label={`Bild ${lightboxIndex + 1} von ${worlds.length}`}
+          >
+            {lightboxIndex + 1} / {worlds.length}
+          </span>
+
           <button
             type="button"
             onClick={(e) => {
@@ -167,6 +190,14 @@ export function World() {
               }}
             />
           </div>
+
+          <a
+            href={`mailto:d.manta@icloud.com?subject=${encodeURIComponent(`Print-Anfrage: World #${String(lightboxIndex + 1).padStart(2, "0")}`)}`}
+            onClick={(e) => e.stopPropagation()}
+            className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 cursor-pointer border border-white/20 px-5 py-2 font-sans text-xs uppercase tracking-[0.2em] text-white/50 transition-all hover:border-white/40 hover:text-white/80"
+          >
+            Print anfragen
+          </a>
         </div>
       ) : null}
     </section>

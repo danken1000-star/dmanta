@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 function MasonryGridImage({
   src,
@@ -89,6 +89,20 @@ export function GalleryClient({ images }: { images: string[] }) {
   const lightboxSrc =
     lightboxIndex !== null ? images[lightboxIndex] ?? null : null;
 
+  const touchStartX = useRef<number | null>(null);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    if (delta < -50) goNext();
+    else if (delta > 50) goPrev();
+    touchStartX.current = null;
+  };
+
   return (
     <section className="w-full" aria-label="Gallery">
       <div
@@ -109,7 +123,16 @@ export function GalleryClient({ images }: { images: string[] }) {
           className="fixed inset-0 z-[100] flex items-center justify-center"
           style={{ backgroundColor: "rgba(0,0,0,0.95)" }}
           onClick={closeLightbox}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
         >
+          <span
+            className="absolute top-5 right-16 z-10 font-sans text-sm leading-none text-white/60 tabular-nums md:top-7 md:right-20"
+            aria-label={`Bild ${lightboxIndex + 1} von ${images.length}`}
+          >
+            {lightboxIndex + 1} / {images.length}
+          </span>
+
           <button
             type="button"
             onClick={(e) => {
