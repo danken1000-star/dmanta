@@ -127,7 +127,7 @@ export function GalleryClient({ images }: { images: string[] }) {
           onTouchEnd={onTouchEnd}
         >
           <span
-            className="absolute top-5 right-16 z-10 font-sans text-sm leading-none text-white/60 tabular-nums md:top-7 md:right-20"
+            className="absolute top-5 right-16 z-10 font-sans text-sm leading-none text-white/60 tabular-nums md:top-7 md:right-auto md:left-1/2 md:-translate-x-1/2"
             aria-label={`Bild ${lightboxIndex + 1} von ${images.length}`}
           >
             {lightboxIndex + 1} / {images.length}

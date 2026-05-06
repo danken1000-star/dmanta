@@ -133,7 +133,7 @@ export function World() {
           onTouchEnd={onTouchEnd}
         >
           <span
-            className="absolute top-5 right-16 z-10 font-sans text-sm leading-none text-white/60 tabular-nums md:top-7 md:right-20"
+            className="absolute top-5 right-16 z-10 font-sans text-sm leading-none text-white/60 tabular-nums md:top-7 md:right-auto md:left-1/2 md:-translate-x-1/2"
             aria-label={`Bild ${lightboxIndex + 1} von ${worlds.length}`}
           >
             {lightboxIndex + 1} / {worlds.length}
@@ -177,7 +177,7 @@ export function World() {
 
           <div
             role="presentation"
-            className="flex max-h-full max-w-full items-center justify-center p-6"
+            className="relative z-0 flex max-h-full max-w-full items-center justify-center p-6 md:pb-16"
             onClick={(e) => e.stopPropagation()}
           >
             <img
@@ -194,7 +194,7 @@ export function World() {
           <a
             href={`mailto:d.manta@icloud.com?subject=${encodeURIComponent(`Print-Anfrage: World #${String(lightboxIndex + 1).padStart(2, "0")}`)}`}
             onClick={(e) => e.stopPropagation()}
-            className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 cursor-pointer border border-white/20 px-5 py-2 font-sans text-xs uppercase tracking-[0.2em] text-white/50 transition-all hover:border-white/40 hover:text-white/80"
+            className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 cursor-pointer border border-white/20 px-5 py-2 font-sans text-xs uppercase tracking-[0.2em] text-white/50 transition-all hover:border-white/40 hover:text-white/80 md:bottom-8"
           >
             Print anfragen
           </a>
