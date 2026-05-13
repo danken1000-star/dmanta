@@ -5,13 +5,6 @@ export function Contact() {
       style={{ padding: "8rem 2rem" }}
       aria-label="Contact"
     >
-      <h2
-        className="font-display font-medium not-italic text-[#F5F0E8]"
-        style={{ fontSize: "4rem", fontStyle: "normal" }}
-      >
-        Let&apos;s work together.
-      </h2>
-
       <p
         className="mt-8 font-sans font-medium uppercase tracking-[0.2em] text-[#666]"
         style={{
