@@ -111,3 +111,10 @@ button {
 .hero-fade-in {
   animation: hero-fade-up 1s ease-out 0.8s both;
 }
+
+/* 3D-Galerie: Fokusrahmen nur bei Tastaturbedienung */
+html[data-input="pointer"] .g3d :focus,
+html[data-input="pointer"] .g3d:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
