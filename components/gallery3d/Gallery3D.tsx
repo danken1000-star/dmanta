@@ -20,7 +20,7 @@ type Props = {
   label: string;
   /** Überschrift über der Bühne */
   heading?: ReactNode;
-  /** 2D-Titel auf der Bodenfläche, blendet beim Losgehen aus */
+  /** 2D-Titel im unteren Drittel, blendet beim Losgehen aus */
   title?: ReactNode;
   /** Anker des nächsten Abschnitts (Pfeil am Ende des Gangs) */
   nextHref: string;
@@ -193,7 +193,7 @@ export function Gallery3D({
   };
 
   return (
-    <section className="g3d relative w-full bg-[#0a0a0a]" aria-label={label}>
+    <section data-theme="dark" className="g3d relative w-full bg-[#0a0a0a]" aria-label={label}>
       {heading}
       <div
         ref={stageRef}
@@ -210,7 +210,7 @@ export function Gallery3D({
           style={{ opacity: ready ? 1 : 0.35 }}
         />
 
-        {/* Untere Zone: Titel bzw. Endpfeil, Bedienung, Weiter */}
+        {/* Untere Zone: Titel (Anfang) bzw. Endpfeil, darunter die Bedienung */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col items-center px-6 pb-3 md:pb-5">
           <div className="grid place-items-center">
             {title ? (

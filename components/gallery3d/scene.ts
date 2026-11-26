@@ -38,12 +38,38 @@ export type RingConfig = {
   fogFar: number;
   /** angestrebte Lücke zwischen zwei Rahmen (Meter); daraus ergibt sich die Rahmenzahl */
   targetGap: number;
+  /**
+   * Titel an der Rückwand, eingeblendet sobald das Ende erreicht ist. Standard: aus.
+   * "full" = DMANTA mit Untertitel, "tagline" = nur "SWISS PRECISION. AFRICAN SOUL."
+   */
+  title?: "full" | "tagline";
+  /** Endabstand zur Rückwand mit Titel (Bogenmeter) [Querformat, Hochformat] */
+  titleEndArc?: [number, number];
+  /** Titelbreite als Anteil der Wandbreite [Querformat, Hochformat] */
+  titleWidth?: [number, number];
 };
+
+// Endtitel an der Rückwand (Stirnwand)
+const TITLE_Y = 2.45; // Mitte über dem Boden
+// Mit Endtitel hält die Kamera näher an der Rückwand und dreht sich auf den letzten Metern
+// rechtwinklig zu ihr: dann laufen Schrift und Wandunterkante im Bild parallel.
+const END_YAW_BLEND = 4; // Meter
 
 export type SceneImage = { tex: string; w: number; h: number };
 
 export const RINGS: Record<"work" | "world", RingConfig> = {
-  work: { outer: 18, inner: 12.2, height: 6.2, camRadius: 15.6, fogNear: 10, fogFar: 46, targetGap: 2 },
+  work: {
+    outer: 18,
+    inner: 12.2,
+    height: 6.2,
+    camRadius: 15.6,
+    fogNear: 10,
+    fogFar: 46,
+    targetGap: 2,
+    title: "full",
+    titleEndArc: [6, 4.2],
+    titleWidth: [0.645, 0.315],
+  },
   // Kleinerer Ring für 12 Bilder: alles mit 0.75 skaliert, damit die Innenwand
   // im gleichen Verhältnis im Blickfeld bleibt wie bei Work.
   world: {
@@ -55,6 +81,11 @@ export const RINGS: Record<"work" | "world", RingConfig> = {
     fogFar: 46,
     // grössere Lücke: jedes Bild hängt zweimal, der Gang wirkt luftig statt repetitiv
     targetGap: 3.6,
+    // Voller Titel wirkt hier besser als nur der Untertitel (der verliert sich auf der Wand);
+    // Alternative: title: "tagline"
+    title: "full",
+    titleEndArc: [4.5, 3.2],
+    titleWidth: [0.62, 0.4],
   },
 };
 
@@ -166,6 +197,7 @@ export class GalleryScene {
 
     this.buildRoom();
     this.buildFrames();
+    if (ring.title) void this.buildTitles();
 
     this.ro = new ResizeObserver(() => this.resize());
     this.ro.observe(container);
@@ -209,6 +241,7 @@ export class GalleryScene {
     const endMat = wallMat.clone();
     endMat.side = THREE.DoubleSide;
     const endWall = new THREE.Mesh(endGeo, endMat);
+    this.endWall = endWall;
     const mid = (outer + inner) / 2;
     endWall.position.set(mid * Math.cos(WALL_ANGLE), height / 2, mid * Math.sin(WALL_ANGLE));
     endWall.rotation.y = -WALL_ANGLE;
@@ -359,6 +392,126 @@ export class GalleryScene {
     this.slots.push(slot);
   }
 
+  // ---------- Wandtitel ----------
+
+  private endTitleMat: THREE.MeshBasicMaterial | null = null;
+  private endTitle: THREE.Mesh | null = null;
+  private endWall: THREE.Mesh | null = null;
+
+  /** Titel als Textur: "DMANTA" (Cormorant) und Untertitel (Syne), Schriften der Seite. */
+  private async titleCanvas(variant: "full" | "tagline") {
+    const css = getComputedStyle(document.documentElement);
+    const display = css.getPropertyValue("--font-display").trim() || "'Cormorant Garamond', serif";
+    const body = css.getPropertyValue("--font-body").trim() || "sans-serif";
+    try {
+      await Promise.all([
+        document.fonts.load(`500 300px ${display}`, "DMANTA"),
+        document.fonts.load(`500 60px ${body}`, "SWISS PRECISION. AFRICAN SOUL."),
+      ]);
+    } catch {
+      // Fallback-Schrift
+    }
+    const W = 2048;
+    const H = variant === "full" ? 640 : 150;
+    const c = document.createElement("canvas");
+    c.width = W;
+    c.height = H;
+    const ctx = c.getContext("2d")!;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "alphabetic";
+
+    const tagY = variant === "full" ? 560 : 105;
+    if (variant === "full") {
+      ctx.fillStyle = "#F5F0E8";
+      let size = 400;
+      ctx.font = `500 ${size}px ${display}`;
+      const tw = ctx.measureText("DMANTA").width;
+      if (tw > W * 0.92) {
+        size *= (W * 0.92) / tw;
+        ctx.font = `500 ${size}px ${display}`;
+      }
+      ctx.fillText("DMANTA", W / 2, 420);
+    }
+
+    // Untertitel mit weiter Laufweite wie im Header
+    const tag = "SWISS PRECISION. AFRICAN SOUL.";
+    let ts = 74;
+    const spacing = (f: number) => f * 0.34;
+    const measure = (f: number) => {
+      ctx.font = `500 ${f}px ${body}`;
+      let w = 0;
+      for (const ch of tag) w += ctx.measureText(ch).width + spacing(f);
+      return w - spacing(f);
+    };
+    let total = measure(ts);
+    if (total > W * 0.94) {
+      ts *= (W * 0.94) / total;
+      total = measure(ts);
+    }
+    ctx.fillStyle = "#72d5c2";
+    ctx.textAlign = "left";
+    let x = (W - total) / 2;
+    for (const ch of tag) {
+      ctx.fillText(ch, x, tagY);
+      x += ctx.measureText(ch).width + spacing(ts);
+    }
+    return c;
+  }
+
+  private async buildTitles() {
+    const canvas = await this.titleCanvas(this.ring.title ?? "full");
+    if (this.disposed) return;
+    const aniso = this.renderer.capabilities.getMaxAnisotropy();
+    const map = new THREE.CanvasTexture(canvas);
+    map.colorSpace = THREE.SRGBColorSpace;
+    map.anisotropy = aniso;
+    this.endTitleMat = new THREE.MeshBasicMaterial({
+      map,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -4,
+    });
+    this.disposables.push(map, this.endTitleMat);
+
+    // Als Kind der Rückwand: gleiche Ebene und Rotation, die Grundlinie liegt damit exakt
+    // parallel zur Wandunterkante. Wand-Lokal: x quer über den Gang, y nach oben, z = Gangseite.
+    const wall = this.endWall;
+    if (!wall) return;
+    const geo = new THREE.PlaneGeometry(1, canvas.height / canvas.width);
+    this.disposables.push(geo);
+    const mesh = new THREE.Mesh(geo, this.endTitleMat);
+    mesh.position.set(0, TITLE_Y - this.ring.height / 2, 0.012);
+    mesh.visible = false;
+    wall.add(mesh);
+    this.endTitle = mesh;
+    this.sizeEndTitle();
+    this.dirty = true;
+  }
+
+  /** Breite des Endtitels je nach Format (Hochformat schmaler). */
+  private sizeEndTitle() {
+    if (!this.endTitle) return;
+    const wallWidth = this.ring.outer - this.ring.inner;
+    const [land, port] = this.ring.titleWidth ?? [0.645, 0.315];
+    this.endTitle.scale.setScalar(wallWidth * (this.portrait ? port : land));
+  }
+
+  /** Endtitel sanft ein-/ausblenden. */
+  private updateEndTitle(dt: number) {
+    const m = this.endTitleMat;
+    if (!m) return;
+    const target = this.edge?.atEnd ? 1 : 0;
+    if (m.opacity === target) return;
+    const k = this.reducedMotion ? 1 : 1 - Math.exp(-dt / 0.45);
+    m.opacity += (target - m.opacity) * k;
+    if (Math.abs(m.opacity - target) < 0.01) m.opacity = target;
+    if (this.endTitle) this.endTitle.visible = m.opacity > 0;
+    this.dirty = true;
+  }
+
   // ---------- Texturen ----------
 
   loadTextures() {
@@ -478,7 +631,7 @@ export class GalleryScene {
     this.focusedSlot = null;
     this.target = this.clamp(this.pose.theta);
     this.startGlide(
-      { theta: this.pose.theta, r: this.ring.camRadius, yaw: WALK_YAW, pitch: WALK_PITCH },
+      { theta: this.pose.theta, r: this.ring.camRadius, yaw: this.walkYaw(this.pose.theta), pitch: WALK_PITCH },
       RETURN_MS,
       "return",
     );
@@ -493,6 +646,22 @@ export class GalleryScene {
     this.back();
     this.target = this.clamp(this.target - dir * STEP);
     this.dirty = true;
+  }
+
+  private portrait = false;
+  private endArc = END_ARC;
+
+  /**
+   * Blickrichtung beim Gehen. Mit Endtitel dreht die Kamera auf den letzten Metern so,
+   * dass sie rechtwinklig auf die Rückwand schaut (Drehung = zurückgelegter Bogenwinkel bis zur Wand).
+   */
+  private walkYaw(theta: number) {
+    if (!this.ring.title) return WALK_YAW;
+    const endYaw = this.endArc / this.ring.camRadius;
+    const toEnd = (theta - this.thetaEnd) * this.ring.camRadius;
+    const t = Math.min(1, Math.max(0, toEnd / END_YAW_BLEND));
+    const smooth = t * t * (3 - 2 * t);
+    return endYaw + (WALK_YAW - endYaw) * smooth;
   }
 
   private clamp(t: number) {
@@ -668,6 +837,11 @@ export class GalleryScene {
     this.last = now;
 
     if (this.mode === "walk") {
+      const yaw = this.walkYaw(this.pose.theta);
+      if (yaw !== this.pose.yaw) {
+        this.pose.yaw = yaw;
+        this.dirty = true;
+      }
       const diff = this.target - this.pose.theta;
       if (Math.abs(diff) > 1e-5) {
         const k = this.reducedMotion ? 1 : 1 - Math.exp(-dt / TAU);
@@ -702,6 +876,7 @@ export class GalleryScene {
     }
 
     this.updateEdge(now);
+    this.updateEndTitle(dt);
 
     if (this.dirty) {
       this.dirty = false;
@@ -729,8 +904,16 @@ export class GalleryScene {
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
     this.camera.fov = h > w ? 70 : 56;
+    this.portrait = h > w;
     this.camera.updateProjectionMatrix();
-    const endArc = h > w ? END_ARC_PORTRAIT : END_ARC;
+    const titleArc = this.ring.title ? (this.ring.titleEndArc ?? [6, 4.2]) : null;
+    const endArc = titleArc
+      ? titleArc[h > w ? 1 : 0]
+      : h > w
+        ? END_ARC_PORTRAIT
+        : END_ARC;
+    this.endArc = endArc;
+    this.sizeEndTitle();
     this.thetaEnd = WALL_ANGLE - 2 * Math.PI + endArc / this.ring.camRadius;
     this.target = this.clamp(this.target);
     if (this.focusedSlot && this.mode === "focus") this.pose = this.focusPose(this.focusedSlot);
