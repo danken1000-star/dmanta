@@ -1,4 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -35,6 +34,30 @@ body {
   min-height: 100%;
   background-color: var(--color-bg);
   color: var(--color-text);
+}
+
+/* Fliesstext: Newsreader, gut lesbar; Farbe je nach Hintergrund über --reading-color */
+.prose-reading {
+  max-width: min(60ch, 100%);
+  overflow-wrap: break-word;
+  font-family: var(--font-reading), Georgia, serif;
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--reading-color, #c8c0b8);
+}
+
+.prose-reading p {
+  margin-bottom: 1.5em;
+}
+
+.prose-reading p:last-child {
+  margin-bottom: 0;
+}
+
+@media (min-width: 768px) {
+  .prose-reading {
+    font-size: 18.5px;
+  }
 }
 
 .font-display {
@@ -110,4 +133,11 @@ button {
 
 .hero-fade-in {
   animation: hero-fade-up 1s ease-out 0.8s both;
+}
+
+/* 3D-Galerie: Fokusrahmen nur bei Tastaturbedienung */
+html[data-input="pointer"] .g3d :focus,
+html[data-input="pointer"] .g3d:focus {
+  outline: none !important;
+  box-shadow: none !important;
 }

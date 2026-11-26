@@ -1,6 +1,7 @@
 export function Contact() {
   return (
     <section
+      data-theme="dark"
       className="bg-[#0a0a0a] text-center"
       style={{ padding: "8rem 2rem" }}
       aria-label="Contact"

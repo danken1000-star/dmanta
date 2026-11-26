@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Analytics } from "@vercel/analytics/react";
-import { Cormorant_Garamond, Syne } from "next/font/google";
+import { Cormorant_Garamond, Newsreader, Syne } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
@@ -10,6 +10,15 @@ const cormorantGaramond = Cormorant_Garamond({
   weight: ["300", "400", "500", "600", "700"],
   variable: "--font-display",
   display: "swap",
+});
+
+// Fliesstext (About, Beschreibungen); variable Schrift, daher ohne feste Gewichte
+const newsreader = Newsreader({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  variable: "--font-reading",
+  display: "swap",
+  fallback: ["Georgia", "serif"],
 });
 
 const syne = Syne({
@@ -78,7 +87,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${cormorantGaramond.variable} ${syne.variable} h-full`}
+      className={`${cormorantGaramond.variable} ${syne.variable} ${newsreader.variable} h-full`}
     >
       <body className={`${syne.className} min-h-full antialiased`}>
         {children}
